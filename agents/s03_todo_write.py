@@ -25,7 +25,7 @@ forces it to keep updating when it forgets.
 
 Key insight: "The agent can track its own progress -- and I can see it."
 """
-
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -168,7 +168,8 @@ def agent_loop(messages: list):
             model=MODEL, system=SYSTEM, messages=messages,
             tools=TOOLS, max_tokens=8000,
         )
-        messages.append({"role": "assistant", "content": response.content})
+        print("assistant response:", response.to_json())
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
         if response.stop_reason != "tool_use":
             return
         results = []
@@ -188,7 +189,7 @@ def agent_loop(messages: list):
         if rounds_since_todo >= 3:
             results.insert(0, {"type": "text", "text": "<reminder>Update your todos.</reminder>"})
         messages.append({"role": "user", "content": results})
-
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":
     history = []
