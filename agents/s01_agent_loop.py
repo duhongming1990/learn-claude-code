@@ -22,7 +22,7 @@ This is the core loop: feed tool results back to the model
 until the model decides to stop. Production agents layer
 policy, hooks, and lifecycle controls on top.
 """
-
+import json
 import os
 import subprocess
 
@@ -70,8 +70,9 @@ def agent_loop(messages: list):
             model=MODEL, system=SYSTEM, messages=messages,
             tools=TOOLS, max_tokens=8000,
         )
+        print("assistant response:", response.to_json())
         # Append assistant turn
-        messages.append({"role": "assistant", "content": response.content})
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
         # If the model didn't call a tool, we're done
         if response.stop_reason != "tool_use":
             return
@@ -85,6 +86,7 @@ def agent_loop(messages: list):
                 results.append({"type": "tool_result", "tool_use_id": block.id,
                                 "content": output})
         messages.append({"role": "user", "content": results})
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
