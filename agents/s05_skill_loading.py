@@ -21,7 +21,7 @@ Two-layer skill injection that avoids bloating the system prompt:
     |   - code-review: Review code...      |
     +--------------------------------------+
 
-    When model calls load_skill("pdf"):
+    When model calls load_skill("pdf"):1
     +--------------------------------------+
     | tool_result:                         |
     | <skill>                              |
@@ -33,7 +33,7 @@ Two-layer skill injection that avoids bloating the system prompt:
 
 Key insight: "Don't put everything in the system prompt. Load on demand."
 """
-
+import json
 import os
 import re
 import subprocess
@@ -190,7 +190,8 @@ def agent_loop(messages: list):
             model=MODEL, system=SYSTEM, messages=messages,
             tools=TOOLS, max_tokens=8000,
         )
-        messages.append({"role": "assistant", "content": response.content})
+        print("assistant response:", response.to_json())
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
         if response.stop_reason != "tool_use":
             return
         results = []
@@ -204,7 +205,7 @@ def agent_loop(messages: list):
                 print(f"> {block.name}: {str(output)[:200]}")
                 results.append({"type": "tool_result", "tool_use_id": block.id, "content": str(output)})
         messages.append({"role": "user", "content": results})
-
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":
     history = []
