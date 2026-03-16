@@ -38,94 +38,19 @@ def post(
 # 示例
 ## Read the file requirements.txt
 1. assistant request
-```json
-{
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "Read the file requirements.txt"
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use tools to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "command"
-        ]
-      }
-    },
-    {
-      "name": "read_file",
-      "description": "Read file contents.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "limit": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "path"
-        ]
-      }
-    },
-    {
-      "name": "write_file",
-      "description": "Write content to file.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "path",
-          "content"
-        ]
-      }
-    },
-    {
-      "name": "edit_file",
-      "description": "Replace exact text in file.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "old_text": {
-            "type": "string"
-          },
-          "new_text": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "path",
-          "old_text",
-          "new_text"
-        ]
-      }
-    }
-  ]
+```python
+from agents.s02_tool_use import TOOLS
+request = {
+    "max_tokens": 8000,
+    "messages": [
+        {
+            "role": "user",
+            "content": "Read the file requirements.txt"
+        }
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use tools to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
 
@@ -200,121 +125,47 @@ def post(
 ]
 ```
 4. assistant request
-```json
- {
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "Read the file requirements.txt"
-    },
-    {
-      "role": "assistant",
-      "content": [
+```python
+from agents.s02_tool_use import TOOLS
+
+request = {
+    "max_tokens": 8000,
+    "messages": [
         {
-          "text": "I'll read the file right away!",
-          "type": "text"
+            "role": "user",
+            "content": "Read the file requirements.txt"
         },
         {
-          "id": "toolu_bdrk_01HkLDUs8cSRneny1ZMt7Vbq",
-          "input": {
-            "path": "/home/lixiang/SourceCode/learn-claude-code/requirements.txt"
-          },
-          "name": "read_file",
-          "type": "tool_use"
+            "role": "assistant",
+            "content": [
+                {
+                    "text": "I'll read the file right away!",
+                    "type": "text"
+                },
+                {
+                    "id": "toolu_bdrk_01HkLDUs8cSRneny1ZMt7Vbq",
+                    "input": {
+                        "path": "/home/lixiang/SourceCode/learn-claude-code/requirements.txt"
+                    },
+                    "name": "read_file",
+                    "type": "tool_use"
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_bdrk_01HkLDUs8cSRneny1ZMt7Vbq",
+                    "content": "anthropic>=0.25.0\npython-dotenv>=1.0.0"
+                }
+            ]
         }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01HkLDUs8cSRneny1ZMt7Vbq",
-          "content": "anthropic>=0.25.0\npython-dotenv>=1.0.0"
-        }
-      ]
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "command"
-        ]
-      }
-    },
-    {
-      "name": "read_file",
-      "description": "Read file contents.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "limit": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "path"
-        ]
-      }
-    },
-    {
-      "name": "write_file",
-      "description": "Write content to file.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "content": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "path",
-          "content"
-        ]
-      }
-    },
-    {
-      "name": "edit_file",
-      "description": "Replace exact text in file.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string"
-          },
-          "old_text": {
-            "type": "string"
-          },
-          "new_text": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "path",
-          "old_text",
-          "new_text"
-        ]
-      }
-    }
-  ]
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
 5. assistant response
@@ -342,6 +193,4 @@ def post(
     "output_tokens": 156
   }
 }
-
-
 ```

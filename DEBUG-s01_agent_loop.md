@@ -60,41 +60,32 @@ def agent_loop(messages: list):
                                 "content": output})
         messages.append({"role": "user", "content": results})
 ```
+
 # 示例
+
 ## List all Python files in this directory
+
 1. assistant request
-```json
-{
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "List all Python files in this directory"
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "command"
-        ]
-      }
-    }
-  ]
+
+```python
+from agents.s01_agent_loop import TOOLS
+
+request = {
+    "max_tokens": 8000,
+    "messages": [
+        {
+            "role": "user",
+            "content": "List all Python files in this directory"
+        }
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
 
 2. assistant response
+
 ```json
 {
   "id": "msg_bdrk_01AgmrMWxew91ipYiGfZQRgP",
@@ -124,7 +115,9 @@ def agent_loop(messages: list):
   }
 }
 ```
+
 3. messages append
+
 ```json
 [
   {
@@ -156,61 +149,51 @@ def agent_loop(messages: list):
   }
 ]
 ```
+
 4. assistant request
-```json
-{
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "List all Python files in this directory"
-    },
-    {
-      "role": "assistant",
-      "content": [
+
+```python
+from agents.s01_agent_loop import TOOLS
+
+request = {
+    "max_tokens": 8000,
+    "messages": [
         {
-          "id": "toolu_bdrk_01HezPHK5DHDMZvKkdWuYzEY",
-          "input": {
-            "command": "find /home/lixiang/SourceCode/learn-claude-code/agents -name \"*.py\" -type f"
-          },
-          "name": "bash",
-          "type": "tool_use"
-        }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01HezPHK5DHDMZvKkdWuYzEY",
-          "content": "/home/lixiang/SourceCode/learn-claude-code/agents/s05_skill_loading.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s07_task_system.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s01_agent_loop.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s11_autonomous_agents.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s12_worktree_task_isolation.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s02_tool_use.py\n/home/lixiang/SourceCode/learn-claude-code/agents/hello.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s08_background_tasks.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s_full.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s03_todo_write.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s09_agent_teams.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s10_team_protocols.py\n/home/lixiang/SourceCode/learn-claude-code/agents/__init__.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s06_context_compact.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s04_subagent.py"
-        }
-      ]
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
+            "role": "user",
+            "content": "List all Python files in this directory"
         },
-        "required": [
-          "command"
-        ]
-      }
-    }
-  ]
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "id": "toolu_bdrk_01HezPHK5DHDMZvKkdWuYzEY",
+                    "input": {
+                        "command": "find /home/lixiang/SourceCode/learn-claude-code/agents -name \"*.py\" -type f"
+                    },
+                    "name": "bash",
+                    "type": "tool_use"
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_bdrk_01HezPHK5DHDMZvKkdWuYzEY",
+                    "content": "/home/lixiang/SourceCode/learn-claude-code/agents/s05_skill_loading.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s07_task_system.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s01_agent_loop.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s11_autonomous_agents.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s12_worktree_task_isolation.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s02_tool_use.py\n/home/lixiang/SourceCode/learn-claude-code/agents/hello.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s08_background_tasks.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s_full.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s03_todo_write.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s09_agent_teams.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s10_team_protocols.py\n/home/lixiang/SourceCode/learn-claude-code/agents/__init__.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s06_context_compact.py\n/home/lixiang/SourceCode/learn-claude-code/agents/s04_subagent.py"
+                }
+            ]
+        }
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
+
 5. assistant response
+
 ```json
 {
   "id": "msg_bdrk_01EWQoB4YkMr2bpkBZuHK9HF",
@@ -237,8 +220,11 @@ def agent_loop(messages: list):
 }
 
 ```
+
 ## Create a file called hello.py that prints "Hello, World!"
+
 1. messages init
+
 ```json
 [
   {
@@ -250,34 +236,20 @@ def agent_loop(messages: list):
 
 2. assistant request
 
-```json
-{
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "Create a file called hello.py that prints \"Hello, World!\""
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "command"
-        ]
-      }
-    }
-  ]
+```python
+from agents.s01_agent_loop import TOOLS
+
+request = {
+    "max_tokens": 8000,
+    "messages": [
+        {
+            "role": "user",
+            "content": "Create a file called hello.py that prints \"Hello, World!\""
+        }
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
 
@@ -355,57 +327,43 @@ def agent_loop(messages: list):
 
 5. assistant request
 
-```json
-{
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "Create a file called hello.py that prints \"Hello, World!\""
-    },
-    {
-      "role": "assistant",
-      "content": [
+```python
+from agents.s01_agent_loop import TOOLS
+
+request = {
+    "max_tokens": 8000,
+    "messages": [
         {
-          "id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
-          "input": {
-            "command": "echo 'print(\"Hello, World!\")' > /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
-          },
-          "name": "bash",
-          "type": "tool_use"
-        }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
-          "content": "(no output)"
-        }
-      ]
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
+            "role": "user",
+            "content": "Create a file called hello.py that prints \"Hello, World!\""
         },
-        "required": [
-          "command"
-        ]
-      }
-    }
-  ]
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
+                    "input": {
+                        "command": "echo 'print(\"Hello, World!\")' > /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
+                    },
+                    "name": "bash",
+                    "type": "tool_use"
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
+                    "content": "(no output)"
+                }
+            ]
+        }
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
 
@@ -444,147 +402,139 @@ def agent_loop(messages: list):
   }
 }
 ```
+
 7. messages append
+
 ```json
 [
-    {
-      "role": "user",
-      "content": "Create a file called hello.py that prints \"Hello, World!\""
-    },
-    {
-      "role": "assistant",
-      "content": [
-        {
-          "id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
-          "input": {
-            "command": "echo 'print(\"Hello, World!\")' > /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
-          },
-          "name": "bash",
-          "type": "tool_use"
-        }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
-          "content": "(no output)"
-        }
-      ]
-    },
-    {
-      "role": "assistant",
-      "content": [
-        {
-          "text": "The file `hello.py` has been created. Let me verify its contents and run it:",
-          "type": "text"
+  {
+    "role": "user",
+    "content": "Create a file called hello.py that prints \"Hello, World!\""
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
+        "input": {
+          "command": "echo 'print(\"Hello, World!\")' > /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
         },
-        {
-          "id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
-          "input": {
-            "command": "cat /home/lixiang/SourceCode/learn-claude-code/agents/hello.py && python /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
-          },
-          "name": "bash",
-          "type": "tool_use"
-        }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
-          "content": "print(\"Hello, World!\")\nHello, World!"
-        }
-      ]
-    }
+        "name": "bash",
+        "type": "tool_use"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
+        "content": "(no output)"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": [
+      {
+        "text": "The file `hello.py` has been created. Let me verify its contents and run it:",
+        "type": "text"
+      },
+      {
+        "id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
+        "input": {
+          "command": "cat /home/lixiang/SourceCode/learn-claude-code/agents/hello.py && python /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
+        },
+        "name": "bash",
+        "type": "tool_use"
+      }
+    ]
+  },
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "tool_result",
+        "tool_use_id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
+        "content": "print(\"Hello, World!\")\nHello, World!"
+      }
+    ]
+  }
 ]
 ```
+
 8. assistant request
-```json
-{
-  "max_tokens": 8000,
-  "messages": [
-    {
-      "role": "user",
-      "content": "Create a file called hello.py that prints \"Hello, World!\""
-    },
-    {
-      "role": "assistant",
-      "content": [
+
+```python
+from agents.s01_agent_loop import TOOLS
+
+request = {
+    "max_tokens": 8000,
+    "messages": [
         {
-          "id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
-          "input": {
-            "command": "echo 'print(\"Hello, World!\")' > /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
-          },
-          "name": "bash",
-          "type": "tool_use"
-        }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
-          "content": "(no output)"
-        }
-      ]
-    },
-    {
-      "role": "assistant",
-      "content": [
-        {
-          "text": "The file `hello.py` has been created. Let me verify its contents and run it:",
-          "type": "text"
+            "role": "user",
+            "content": "Create a file called hello.py that prints \"Hello, World!\""
         },
         {
-          "id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
-          "input": {
-            "command": "cat /home/lixiang/SourceCode/learn-claude-code/agents/hello.py && python /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
-          },
-          "name": "bash",
-          "type": "tool_use"
-        }
-      ]
-    },
-    {
-      "role": "user",
-      "content": [
-        {
-          "type": "tool_result",
-          "tool_use_id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
-          "content": "print(\"Hello, World!\")\nHello, World!"
-        }
-      ]
-    }
-  ],
-  "model": "aws-claude-sonnet-4-6",
-  "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
-  "tools": [
-    {
-      "name": "bash",
-      "description": "Run a shell command.",
-      "input_schema": {
-        "type": "object",
-        "properties": {
-          "command": {
-            "type": "string"
-          }
+            "role": "assistant",
+            "content": [
+                {
+                    "id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
+                    "input": {
+                        "command": "echo 'print(\"Hello, World!\")' > /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
+                    },
+                    "name": "bash",
+                    "type": "tool_use"
+                }
+            ]
         },
-        "required": [
-          "command"
-        ]
-      }
-    }
-  ]
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_bdrk_01TMXwbNcmAawTuaY5TTTFX7",
+                    "content": "(no output)"
+                }
+            ]
+        },
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "text": "The file `hello.py` has been created. Let me verify its contents and run it:",
+                    "type": "text"
+                },
+                {
+                    "id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
+                    "input": {
+                        "command": "cat /home/lixiang/SourceCode/learn-claude-code/agents/hello.py && python /home/lixiang/SourceCode/learn-claude-code/agents/hello.py"
+                    },
+                    "name": "bash",
+                    "type": "tool_use"
+                }
+            ]
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": "toolu_bdrk_01MdF2ouiJpVdHkqLyymKAi9",
+                    "content": "print(\"Hello, World!\")\nHello, World!"
+                }
+            ]
+        }
+    ],
+    "model": "aws-claude-sonnet-4-6",
+    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use bash to solve tasks. Act, don't explain.",
+    "tools": TOOLS
 }
 ```
+
 9. assistant response
+
 ```json
 {
   "id": "msg_bdrk_01S3QhxehKw5m5TxRxuomDMh",
