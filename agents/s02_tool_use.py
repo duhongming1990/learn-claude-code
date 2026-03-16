@@ -17,7 +17,7 @@ and a dispatch map to route calls.
 
 Key insight: "The loop didn't change at all. I just added tools."
 """
-
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -116,7 +116,8 @@ def agent_loop(messages: list):
             model=MODEL, system=SYSTEM, messages=messages,
             tools=TOOLS, max_tokens=8000,
         )
-        messages.append({"role": "assistant", "content": response.content})
+        print("assistant response:", response.to_json())
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
         if response.stop_reason != "tool_use":
             return
         results = []
@@ -127,7 +128,7 @@ def agent_loop(messages: list):
                 print(f"> {block.name}: {output[:200]}")
                 results.append({"type": "tool_result", "tool_use_id": block.id, "content": output})
         messages.append({"role": "user", "content": results})
-
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":
     history = []
