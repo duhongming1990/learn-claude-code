@@ -1,38 +1,3 @@
-# Debug位置
-
-[_base_client.py](.venv/lib/python3.13/site-packages/anthropic/_base_client.py)
-
-#1361
-
-```python
-def post(
-        self,
-        path: str,
-        *,
-        cast_to: Type[ResponseT],
-        body: Body | None = None,
-        content: BinaryTypes | None = None,
-        options: RequestOptions = {},
-        files: RequestFiles | None = None,
-        stream: bool = False,
-        stream_cls: type[_StreamT] | None = None,
-) -> ResponseT | _StreamT:
-    if body is not None and content is not None:
-        raise TypeError("Passing both `body` and `content` is not supported")
-    if files is not None and content is not None:
-        raise TypeError("Passing both `files` and `content` is not supported")
-    if isinstance(body, bytes):
-        warnings.warn(
-            "Passing raw bytes as `body` is deprecated and will be removed in a future version. "
-            "Please pass raw bytes via the `content` parameter instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-    opts = FinalRequestOptions.construct(
-        method="post", url=path, json_data=body, content=content, files=to_httpx_files(files), **options
-    )
-    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
-```
 # 工具
 One Handler Per Tool  每个工具一个处理器
 
@@ -115,7 +80,7 @@ for block in response.content:
 | Agent loop代理循环 | 不变          | 不变                         |
 
 ## 试一试
-```python
+```bash
 cd learn-claude-code
 python agents/s02_tool_use.py
 ```
