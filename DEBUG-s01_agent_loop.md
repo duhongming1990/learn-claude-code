@@ -66,7 +66,7 @@ Single-tool agent loop  单工具代理循环
 
     The minimal agent kernel is a while loop + one tool
     最小代理内核是一个 while 循环+一个工具
-![screenshot-20260317-155314.png](screenshot-20260317-155314.png)
+![agent-loop.png](agent-loop.png)
 
     "One loop & Bash is all you need" -- 一个工具 + 一个循环 = 一个智能体。
 
