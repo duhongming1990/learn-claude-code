@@ -54,7 +54,7 @@ MODEL = os.environ["MODEL_ID"]
 
 SYSTEM = f"You are a coding agent at {WORKDIR}. Use tools to solve tasks."
 
-THRESHOLD = 50000
+THRESHOLD = 10000
 TRANSCRIPT_DIR = WORKDIR / ".transcripts"
 KEEP_RECENT = 3
 
@@ -113,6 +113,7 @@ def auto_compact(messages: list) -> list:
             "Be concise but preserve critical details.\n\n" + conversation_text}],
         max_tokens=2000,
     )
+    print("compact assistant response:", response.to_json())
     summary = response.content[0].text
     # Replace all messages with compressed summary
     return [
@@ -196,15 +197,18 @@ def agent_loop(messages: list):
     while True:
         # Layer 1: micro_compact before each LLM call
         micro_compact(messages)
+        print("micro compact messages:", json.dumps(messages, indent=2, ensure_ascii=False))
         # Layer 2: auto_compact if token estimate exceeds threshold
         if estimate_tokens(messages) > THRESHOLD:
             print("[auto_compact triggered]")
             messages[:] = auto_compact(messages)
+            print("auto compact messages:", json.dumps(messages, indent=2, ensure_ascii=False))
         response = client.messages.create(
             model=MODEL, system=SYSTEM, messages=messages,
             tools=TOOLS, max_tokens=8000,
         )
-        messages.append({"role": "assistant", "content": response.content})
+        print("assistant response:", response.to_json())
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
         if response.stop_reason != "tool_use":
             return
         results = []
@@ -223,10 +227,12 @@ def agent_loop(messages: list):
                 print(f"> {block.name}: {str(output)[:200]}")
                 results.append({"type": "tool_result", "tool_use_id": block.id, "content": str(output)})
         messages.append({"role": "user", "content": results})
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
         # Layer 3: manual compact triggered by the compact tool
         if manual_compact:
             print("[manual compact]")
             messages[:] = auto_compact(messages)
+            print("manual compact messages:", json.dumps(messages, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
