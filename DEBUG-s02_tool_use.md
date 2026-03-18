@@ -110,7 +110,7 @@ request = {
         }
     ],
     "model": "aws-claude-sonnet-4-6",
-    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
+    "system": "You are a coding agent at /home/xiangli/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
     "tools": TOOLS
 }
 ```
@@ -127,7 +127,7 @@ request = {
     {
       "id": "toolu_bdrk_01AQKsfx69xNnaeSBdbbG7uv",
       "input": {
-        "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py"
+        "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py"
       },
       "name": "read_file",
       "type": "tool_use"
@@ -170,7 +170,7 @@ request = {
       {
         "id": "toolu_bdrk_01AQKsfx69xNnaeSBdbbG7uv",
         "input": {
-          "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py"
+          "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py"
         },
         "name": "read_file",
         "type": "tool_use"
@@ -211,7 +211,7 @@ request = {
                 {
                     "id": "toolu_bdrk_01AQKsfx69xNnaeSBdbbG7uv",
                     "input": {
-                        "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py"
+                        "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py"
                     },
                     "name": "read_file",
                     "type": "tool_use"
@@ -230,7 +230,7 @@ request = {
         }
     ],
     "model": "aws-claude-sonnet-4-6",
-    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
+    "system": "You are a coding agent at /home/xiangli/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
     "tools": TOOLS
 }
 ```
@@ -248,7 +248,7 @@ write_file 替换整个文件内容
     {
       "id": "toolu_bdrk_01VJcPaD7M7nRsahJFStqss2",
       "input": {
-        "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py",
+        "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py",
         "old_text": "print(\"Hello, World!\")",
         "new_text": "print(\"Hello, World!\")\n\n\ndef greet(name):\n    \"\"\"Greet a person by name.\"\"\"\n    print(f\"Hello, {name}!\")\n"
       },
@@ -273,7 +273,7 @@ write_file 替换整个文件内容
 }
 
 ```
-> edit_file: Edited /home/lixiang/SourceCode/learn-claude-code/hello.py
+> edit_file: Edited /home/xiangli/SourceCode/learn-claude-code/hello.py
 6. messages: 
 Write confirmed  写入确认
 ```json
@@ -294,7 +294,7 @@ Write confirmed  写入确认
       {
         "id": "toolu_bdrk_01AQKsfx69xNnaeSBdbbG7uv",
         "input": {
-          "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py"
+          "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py"
         },
         "name": "read_file",
         "type": "tool_use"
@@ -321,7 +321,7 @@ Write confirmed  写入确认
       {
         "id": "toolu_bdrk_01VJcPaD7M7nRsahJFStqss2",
         "input": {
-          "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py",
+          "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py",
           "old_text": "print(\"Hello, World!\")",
           "new_text": "print(\"Hello, World!\")\n\n\ndef greet(name):\n    \"\"\"Greet a person by name.\"\"\"\n    print(f\"Hello, {name}!\")\n"
         },
@@ -336,7 +336,7 @@ Write confirmed  写入确认
       {
         "type": "tool_result",
         "tool_use_id": "toolu_bdrk_01VJcPaD7M7nRsahJFStqss2",
-        "content": "Edited /home/lixiang/SourceCode/learn-claude-code/hello.py"
+        "content": "Edited /home/xiangli/SourceCode/learn-claude-code/hello.py"
       }
     ]
   }
@@ -363,7 +363,7 @@ request = {
                 {
                     "id": "toolu_bdrk_01AQKsfx69xNnaeSBdbbG7uv",
                     "input": {
-                        "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py"
+                        "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py"
                     },
                     "name": "read_file",
                     "type": "tool_use"
@@ -390,7 +390,7 @@ request = {
                 {
                     "id": "toolu_bdrk_01VJcPaD7M7nRsahJFStqss2",
                     "input": {
-                        "path": "/home/lixiang/SourceCode/learn-claude-code/hello.py",
+                        "path": "/home/xiangli/SourceCode/learn-claude-code/hello.py",
                         "old_text": "print(\"Hello, World!\")",
                         "new_text": "print(\"Hello, World!\")\n\n\ndef greet(name):\n    \"\"\"Greet a person by name.\"\"\"\n    print(f\"Hello, {name}!\")\n"
                     },
@@ -405,13 +405,13 @@ request = {
                 {
                     "type": "tool_result",
                     "tool_use_id": "toolu_bdrk_01VJcPaD7M7nRsahJFStqss2",
-                    "content": "Edited /home/lixiang/SourceCode/learn-claude-code/hello.py"
+                    "content": "Edited /home/xiangli/SourceCode/learn-claude-code/hello.py"
                 }
             ]
         }
     ],
     "model": "aws-claude-sonnet-4-6",
-    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
+    "system": "You are a coding agent at /home/xiangli/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
     "tools": TOOLS
 }
 
@@ -461,7 +461,7 @@ request = {
         }
     ],
     "model": "aws-claude-sonnet-4-6",
-    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code/agents. Use tools to solve tasks. Act, don't explain.",
+    "system": "You are a coding agent at /home/xiangli/SourceCode/learn-claude-code/agents. Use tools to solve tasks. Act, don't explain.",
     "tools": TOOLS
 }
 ```
@@ -517,7 +517,7 @@ request = {
       {
         "id": "toolu_bdrk_01HkLDUs8cSRneny1ZMt7Vbq",
         "input": {
-          "path": "/home/lixiang/SourceCode/learn-claude-code/requirements.txt"
+          "path": "/home/xiangli/SourceCode/learn-claude-code/requirements.txt"
         },
         "name": "read_file",
         "type": "tool_use"
@@ -557,7 +557,7 @@ request = {
                 {
                     "id": "toolu_bdrk_01HkLDUs8cSRneny1ZMt7Vbq",
                     "input": {
-                        "path": "/home/lixiang/SourceCode/learn-claude-code/requirements.txt"
+                        "path": "/home/xiangli/SourceCode/learn-claude-code/requirements.txt"
                     },
                     "name": "read_file",
                     "type": "tool_use"
@@ -576,7 +576,7 @@ request = {
         }
     ],
     "model": "aws-claude-sonnet-4-6",
-    "system": "You are a coding agent at /home/lixiang/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
+    "system": "You are a coding agent at /home/xiangli/SourceCode/learn-claude-code. Use tools to solve tasks. Act, don't explain.",
     "tools": TOOLS
 }
 ```
