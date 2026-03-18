@@ -1,5 +1,32 @@
+# Debug位置
+
+[s02_tool_use.py](agents/s02_tool_use.py)#120 #132
+
+```python
+def agent_loop(messages: list):
+    while True:
+        response = client.messages.create(
+            model=MODEL, system=SYSTEM, messages=messages,
+            tools=TOOLS, max_tokens=8000,
+        )
+        print("assistant response:", response.to_json())
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
+        if response.stop_reason != "tool_use":
+            return
+        results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                handler = TOOL_HANDLERS.get(block.name)
+                output = handler(**block.input) if handler else f"Unknown tool: {block.name}"
+                print(f"> {block.name}: {output[:200]}")
+                results.append({"type": "tool_result", "tool_use_id": block.id, "content": output})
+        messages.append({"role": "user", "content": results})
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
+```
+
 # 工具
-One Handler Per Tool  每个工具一个处理器
+
+One Handler Per Tool 每个工具一个处理器
 
     The loop stays the same; new tools register into the dispatch map
     循环保持不变；新工具注册到调度映射
@@ -7,27 +34,33 @@ One Handler Per Tool  每个工具一个处理器
 ![tool-use.png](tool-use.png)
 
     "加一个工具, 只加一个 handler" -- 循环不用动, 新工具注册进 dispatch map 就行。
+
 ## 问题
-只有 `bash` 时, 所有操作都走 shell。`cat` 截断不可预测, `sed` 遇到特殊字符就崩, 每次 bash 调用都是不受约束的安全面。专用工具 (`read_file`, `write_file`) 可以在工具层面做路径沙箱。
+
+只有 `bash` 时, 所有操作都走 shell。`cat` 截断不可预测, `sed` 遇到特殊字符就崩, 每次 bash
+调用都是不受约束的安全面。专用工具 (`read_file`, `write_file`) 可以在工具层面做路径沙箱。
 
 关键洞察: 加工具不需要改循环。
 
 ## 解决方案
+
 ```markdown
-+--------+      +-------+      +------------------+
-|  User  | ---> |  LLM  | ---> | Tool Dispatch    |
-| prompt |      |       |      | {                |
-+--------+      +---+---+      |   bash: run_bash |
-                    ^           |   read: run_read |
-                    |           |   write: run_wr  |
-                    +-----------+   edit: run_edit |
-                    tool_result | }                |
-                                +------------------+
++--------+ +-------+ +------------------+
+| User | ---> | LLM | ---> | Tool Dispatch |
+| prompt | | | | { |
++--------+ +---+---+ | bash: run_bash |
+^ | read: run_read |
+| | write: run_wr |
++-----------+ edit: run_edit |
+tool_result | } |
++------------------+
 
 The dispatch map is a dict: {tool_name: handler_function}.
 One lookup replaces any if/elif chain.
 ```
+
 ## 工作原理
+
 1. 每个工具有一个处理函数。路径沙箱防止逃逸工作区。
 
 ```python
@@ -36,6 +69,7 @@ def safe_path(p: str) -> Path:
     if not path.is_relative_to(WORKDIR):
         raise ValueError(f"Path escapes workspace: {p}")
     return path
+
 
 def run_read(path: str, limit: int = None) -> str:
     try:
@@ -49,16 +83,18 @@ def run_read(path: str, limit: int = None) -> str:
 ```
 
 2. dispatch map 将工具名映射到处理函数。
+
 ```python
 TOOL_HANDLERS = {
-    "bash":       lambda **kw: run_bash(kw["command"]),
-    "read_file":  lambda **kw: run_read(kw["path"], kw.get("limit")),
+    "bash": lambda **kw: run_bash(kw["command"]),
+    "read_file": lambda **kw: run_read(kw["path"], kw.get("limit")),
     "write_file": lambda **kw: run_write(kw["path"], kw["content"]),
-    "edit_file":  lambda **kw: run_edit(kw["path"], kw["old_text"], kw["new_text"]),
+    "edit_file": lambda **kw: run_edit(kw["path"], kw["old_text"], kw["new_text"]),
 }
 ```
 
 3. 循环中按名称查找处理函数。循环体本身与 s01 完全一致。
+
 ```python
 for block in response.content:
     if block.type == "tool_use":
@@ -72,32 +108,37 @@ for block in response.content:
 
 ## 相对 s01 的变更
 
-| 组件             | 之前 (s01)    | 之后 (s02)                   |
-|----------------| ----------- |----------------------------|
+| 组件             | 之前 (s01)    | 之后 (s02)                    |
+|----------------|-------------|-----------------------------|
 | Tools 工具       | 1 (仅 bash)  | 4 (bash, read, write, edit) |
-| Dispatch       | 硬编码 bash 调用 | `TOOL_HANDLERS` 字典         |
-| 路径安全           | 无           | `safe_path()`沙箱            |
-| Agent loop代理循环 | 不变          | 不变                         |
+| Dispatch       | 硬编码 bash 调用 | `TOOL_HANDLERS` 字典          |
+| 路径安全           | 无           | `safe_path()`沙箱             |
+| Agent loop代理循环 | 不变          | 不变                          |
 
 ## 试一试
+
 ```bash
 cd learn-claude-code
 python agents/s02_tool_use.py
 ```
 
 试试这些 prompt (英文 prompt 对 LLM 效果更好, 也可以用中文):
+
 - Add a function called greet(name) to hello.py
 - Read the file requirements.txt
 - Create a file called greet.py with a greet(name) function
 - Edit greet.py to add a docstring to the function
 - Read greet.py to verify the edit worked
 
-
 ## 示例
+
 ### Add a function called greet(name) to hello.py
+
 在 hello.py 中添加一个名为 greet(name)的函数
-1. assistant request: 
-用户请求代码修改
+
+1. assistant request:
+   用户请求代码修改
+
 ```python
 from agents.s02_tool_use import TOOLS
 
@@ -114,8 +155,10 @@ request = {
     "tools": TOOLS
 }
 ```
-2. assistant response: 
-模型选择了 read_file 而不是 bash cat
+
+2. assistant response:
+   模型选择了 read_file 而不是 bash cat
+
 ```json
 {
   "id": "msg_bdrk_017U4mxo8ja6xitbbZvMYyC8",
@@ -149,9 +192,12 @@ request = {
   }
 }
 ```
+
 > read_file: print("Hello, World!")
+
 3. messages:
-专用的读取工具提供更干净的文件访问
+   专用的读取工具提供更干净的文件访问
+
 ```json
 
 
@@ -189,8 +235,10 @@ request = {
   }
 ]
 ```
-4. assistant request: 
-文件内容返回给模型
+
+4. assistant request:
+   文件内容返回给模型
+
 ```python
 from agents.s02_tool_use import TOOLS
 
@@ -234,8 +282,10 @@ request = {
     "tools": TOOLS
 }
 ```
-5. assistant response: 
-write_file 替换整个文件内容
+
+5. assistant response:
+   write_file 替换整个文件内容
+
 ```json
 
 {
@@ -273,9 +323,12 @@ write_file 替换整个文件内容
 }
 
 ```
+
 > edit_file: Edited /home/xiangli/SourceCode/learn-claude-code/hello.py
-6. messages: 
-Write confirmed  写入确认
+
+6. messages:
+   Write confirmed 写入确认
+
 ```json
 
 
@@ -342,7 +395,9 @@ Write confirmed  写入确认
   }
 ]
 ```
-7. assistant request: 
+
+7. assistant request:
+
 ```python
 from agents.s02_tool_use import TOOLS
 
@@ -416,10 +471,12 @@ request = {
 }
 
 ```
-8. assistant response: 
-I've updated hello.py with a greet(name) function that takes a name parameter.
-我已更新 hello.py，添加了一个 greet(name)函数，该函数接受一个 name 参数。
-4 个工具胜过 1 个：每个工具都有明确、专注的目的
+
+8. assistant response:
+   I've updated hello.py with a greet(name) function that takes a name parameter.
+   我已更新 hello.py，添加了一个 greet(name)函数，该函数接受一个 name 参数。
+   4 个工具胜过 1 个：每个工具都有明确、专注的目的
+
 ```json
 
 
@@ -449,9 +506,12 @@ I've updated hello.py with a greet(name) function that takes a name parameter.
 ```
 
 ### Read the file requirements.txt
+
 1. assistant request
+
 ```python
 from agents.s02_tool_use import TOOLS
+
 request = {
     "max_tokens": 8000,
     "messages": [
@@ -467,6 +527,7 @@ request = {
 ```
 
 2. assistant response
+
 ```json
 {
   "id": "msg_bdrk_01NvuCmmn2VXafLXeJ924krY",
@@ -500,7 +561,9 @@ request = {
   }
 }
 ```
+
 3. messages append
+
 ```json
  [
   {
@@ -536,7 +599,9 @@ request = {
   }
 ]
 ```
+
 4. assistant request
+
 ```python
 from agents.s02_tool_use import TOOLS
 
@@ -580,7 +645,9 @@ request = {
     "tools": TOOLS
 }
 ```
+
 5. assistant response
+
 ```json
 {
   "id": "msg_bdrk_01UGMYjZfW4kFCDhuyK7412k",
@@ -606,21 +673,33 @@ request = {
   }
 }
 ```
+
 ## 设计决策
+
 1. 为什么恰好四个工具?
 
-四个工具分别是 bash、read_file、write_file 和 edit_file，覆盖了大约 95% 的编程任务。Bash 处理执行和任意命令；read_file 提供带行号的精确文件读取；write_file 创建或覆盖文件；edit_file 做精确的字符串替换。工具越多，模型的认知负担越重——它必须在更多选项中做选择，选错的概率也随之增加。更少的工具也意味着更少的 schema 需要维护、更少的边界情况需要处理。
+四个工具分别是 bash、read_file、write_file 和 edit_file，覆盖了大约 95% 的编程任务。Bash 处理执行和任意命令；read_file
+提供带行号的精确文件读取；write_file 创建或覆盖文件；edit_file
+做精确的字符串替换。工具越多，模型的认知负担越重——它必须在更多选项中做选择，选错的概率也随之增加。更少的工具也意味着更少的
+schema 需要维护、更少的边界情况需要处理。
 
-我们可以添加专门的工具（list_directory、search_files、http_request），后续版本也确实添加了。但在这个阶段，bash 已经涵盖了这些用例。从 v0 的单个工具到 v1 的四个工具的分离，特别是为了给模型提供结构化的文件操作 I/O，而 bash 的引号和转义常常让模型出错。
+我们可以添加专门的工具（list_directory、search_files、http_request），后续版本也确实添加了。但在这个阶段，bash 已经涵盖了这些用例。从
+v0 的单个工具到 v1 的四个工具的分离，特别是为了给模型提供结构化的文件操作 I/O，而 bash 的引号和转义常常让模型出错。
 
 2. 模型本身就是代理
 
-核心 agent 循环极其简单：不断调用 LLM，如果返回 tool_use 块就执行并回传结果，如果只返回文本就停止。没有路由器，没有决策树，没有工作流引擎。模型自己决定做什么、何时停止、如何从错误中恢复。代码只是连接模型和工具的管道。这是一种设计哲学：agent 行为从模型中涌现，而非由框架定义。
+核心 agent 循环极其简单：不断调用 LLM，如果返回 tool_use
+块就执行并回传结果，如果只返回文本就停止。没有路由器，没有决策树，没有工作流引擎。模型自己决定做什么、何时停止、如何从错误中恢复。代码只是连接模型和工具的管道。这是一种设计哲学：agent
+行为从模型中涌现，而非由框架定义。
 
-许多代理框架添加了复杂的编排层：带有明确的思想/行动/观察解析的 ReAct 循环、LangChain 风格的链、AutoGPT 风格的目标分解。这些框架假设模型需要脚手架才能表现得像代理。我们的方法假设模型已经知道如何成为代理——它只需要工具来作用于世界。
+许多代理框架添加了复杂的编排层：带有明确的思想/行动/观察解析的 ReAct 循环、LangChain 风格的链、AutoGPT
+风格的目标分解。这些框架假设模型需要脚手架才能表现得像代理。我们的方法假设模型已经知道如何成为代理——它只需要工具来作用于世界。
 
 3. 每个工具都有 JSON Schema
 
-每个工具都为输入参数定义了严格的 JSON schema。例如，edit_file 要求 old_string 和 new_string 是精确的字符串，而非正则表达式。这消除了一整类错误：模型无法传递格式错误的输入，因为 API 会在执行前校验 schema。这也使模型的意图变得明确——当它用特定字符串调用 edit_file 时，不存在关于它想修改什么的解析歧义。
+每个工具都为输入参数定义了严格的 JSON schema。例如，edit_file 要求 old_string 和 new_string
+是精确的字符串，而非正则表达式。这消除了一整类错误：模型无法传递格式错误的输入，因为 API 会在执行前校验
+schema。这也使模型的意图变得明确——当它用特定字符串调用 edit_file 时，不存在关于它想修改什么的解析歧义。
 
-有些代理系统允许模型输出自由形式的文本，这些文本通过正则表达式或启发式方法进行解析（例如，从 markdown 代码块中提取代码）。这是脆弱的——模型可能会稍微改变输出格式并破坏解析器。JSON 模式用灵活性换取了可靠性。
+有些代理系统允许模型输出自由形式的文本，这些文本通过正则表达式或启发式方法进行解析（例如，从 markdown
+代码块中提取代码）。这是脆弱的——模型可能会稍微改变输出格式并破坏解析器。JSON 模式用灵活性换取了可靠性。

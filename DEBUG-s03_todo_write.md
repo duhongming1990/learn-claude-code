@@ -1,3 +1,38 @@
+# Debug位置
+[s03_todo_write.py](agents/s03_todo_write.py)#172 #193 
+```python
+def agent_loop(messages: list):
+    rounds_since_todo = 0
+    while True:
+        # Nag reminder is injected below, alongside tool results
+        response = client.messages.create(
+            model=MODEL, system=SYSTEM, messages=messages,
+            tools=TOOLS, max_tokens=8000,
+        )
+        print("assistant response:", response.to_json())
+        messages.append({"role": "assistant", "content": [b.to_dict() for b in response.content]})
+        if response.stop_reason != "tool_use":
+            return
+        results = []
+        used_todo = False
+        for block in response.content:
+            if block.type == "tool_use":
+                handler = TOOL_HANDLERS.get(block.name)
+                try:
+                    output = handler(**block.input) if handler else f"Unknown tool: {block.name}"
+                except Exception as e:
+                    output = f"Error: {e}"
+                print(f"> {block.name}: {str(output)[:200]}")
+                results.append({"type": "tool_result", "tool_use_id": block.id, "content": str(output)})
+                if block.name == "todo":
+                    used_todo = True
+        rounds_since_todo = 0 if used_todo else rounds_since_todo + 1
+        if rounds_since_todo >= 3:
+            results.insert(0, {"type": "text", "text": "<reminder>Update your todos.</reminder>"})
+        messages.append({"role": "user", "content": results})
+        print("messages:", json.dumps(messages, indent=2, ensure_ascii=False))
+```
+
 # Plan Before You Act  行动前先计划
 
     An agent without a plan drifts; list the steps first, then execute

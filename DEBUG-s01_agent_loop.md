@@ -33,7 +33,7 @@ def post(
     return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
 ```
 
-[s01_agent_loop.py](agents/s01_agent_loop.py)#73 #89
+[s01_agent_loop.py](agents/s01_agent_loop.py)#74 #90
 
 ```python
 def agent_loop(messages: list):
