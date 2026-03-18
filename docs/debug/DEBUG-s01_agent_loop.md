@@ -69,6 +69,7 @@ Single-tool agent loop  单工具代理循环
 ![agent-loop.png](agent-loop.png)
 
     "One loop & Bash is all you need" -- 一个工具 + 一个循环 = 一个智能体。
+    Harness 层: 循环 -- 模型与真实世界的第一道连接。
 
 ## 问题
 语言模型能推理代码, 但碰不到真实世界 -- 不能读文件、跑测试、看报错。没有循环, 每次工具调用你都得手动把结果粘回去。你自己就是那个循环。

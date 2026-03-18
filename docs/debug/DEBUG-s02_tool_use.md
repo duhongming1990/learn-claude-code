@@ -28,12 +28,13 @@ def agent_loop(messages: list):
 
 One Handler Per Tool 每个工具一个处理器
 
-    The loop stays the same; new tools register into the dispatch map
-    循环保持不变；新工具注册到调度映射
+   The loop stays the same; new tools register into the dispatch map 
+   循环保持不变；新工具注册到调度映射
 
 ![tool-use.png](tool-use.png)
 
-    "加一个工具, 只加一个 handler" -- 循环不用动, 新工具注册进 dispatch map 就行。
+   "加一个工具, 只加一个 handler" -- 循环不用动, 新工具注册进 dispatch map 就行。
+   Harness 层: 工具分发 -- 扩展模型能触达的边界。
 
 ## 问题
 
