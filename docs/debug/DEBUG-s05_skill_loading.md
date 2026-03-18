@@ -1,4 +1,112 @@
-# What skills are available?
+# 技能-按需加载
+
+    Inject knowledge via tool_result when needed, not upfront in the system prompt
+    通过工具结果在需要时注入知识，而不是在系统提示中预先注入
+
+![skill-loading.png](skill-loading.png)
+
+    "用到什么知识, 临时加载什么知识" -- 通过 tool_result 注入, 不塞 system prompt。
+    Harness 层: 按需知识 -- 模型开口要时才给的领域专长。
+
+## 问题
+你希望智能体遵循特定领域的工作流: git 约定、测试模式、代码审查清单。全塞进系统提示太浪费 -- 10 个技能, 每个 2000 token, 就是 20,000 token, 大部分跟当前任务毫无关系。
+
+## 解决方案
+
+```markdown
+System prompt (Layer 1 -- always present):
++--------------------------------------+
+| You are a coding agent.              |
+| Skills available:                    |
+|   - git: Git workflow helpers        |  ~100 tokens/skill
+|   - test: Testing best practices     |
++--------------------------------------+
+
+When model calls load_skill("git"):
++--------------------------------------+
+| tool_result (Layer 2 -- on demand):  |
+| <skill name="git">                   |
+|   Full git workflow instructions...  |  ~2000 tokens
+|   Step 1: ...                        |
+| </skill>                             |
++--------------------------------------+
+```
+第一层: 系统提示中放技能名称 (低成本)。第二层: tool_result 中按需放完整内容。
+
+## 工作原理
+
+1. 每个技能是一个目录, 包含 SKILL.md 文件和 YAML frontmatter。
+```python
+# -- SkillLoader: scan skills/<name>/SKILL.md with YAML frontmatter --
+class SkillLoader:
+    def __init__(self, skills_dir: Path):
+        self.skills_dir = skills_dir
+        self.skills = {}
+        self._load_all()
+
+    def get_descriptions(self) -> str:
+        """Layer 1: short descriptions for the system prompt."""
+        if not self.skills:
+            return "(no skills available)"
+        lines = []
+        for name, skill in self.skills.items():
+            desc = skill["meta"].get("description", "No description")
+            tags = skill["meta"].get("tags", "")
+            line = f"  - {name}: {desc}"
+            if tags:
+                line += f" [{tags}]"
+            lines.append(line)
+        return "\n".join(lines)
+
+    def get_content(self, name: str) -> str:
+        """Layer 2: full skill body returned in tool_result."""
+        skill = self.skills.get(name)
+        if not skill:
+            return f"Error: Unknown skill '{name}'. Available: {', '.join(self.skills.keys())}"
+        return f"<skill name=\"{name}\">\n{skill['body']}\n</skill>"
+```
+
+2. 第一层写入系统提示。第二层不过是 dispatch map 中的又一个工具。
+```python
+# Layer 1: skill metadata injected into system prompt
+SYSTEM = f"""You are a coding agent at {WORKDIR}.
+Use load_skill to access specialized knowledge before tackling unfamiliar topics.
+
+Skills available:
+{SKILL_LOADER.get_descriptions()}"""
+
+TOOL_HANDLERS = {
+    # ...base tools...
+    "load_skill": lambda **kw: SKILL_LOADER.get_content(kw["name"]),
+}
+```
+模型知道有哪些技能 (便宜), 需要时再加载完整内容 (贵)。
+
+## 相对 s04 的变更
+| 组件       | 之前 (s04)      | 之后 (s05)             |
+|----------| ------------- | -------------------- |
+| Tools 工具 | 5 (基础 + task) | 5 (基础 + load_skill)  |
+| 系统提示     | 静态字符串         | + 技能描述列表             |
+| 知识库      | 无             | skills/*/SKILL.md 文件 |
+| 注入方式     | 无             | 两层 (系统提示 + result)   |
+
+## 试一试
+
+```bash
+cd learn-claude-code
+python agents/s05_skill_loading.py
+```
+
+试试这些 prompt (英文 prompt 对 LLM 效果更好, 也可以用中文):
+
+- What skills are available?
+- Load the agent-builder skill and follow its instructions
+- I need to do a code review -- load the relevant skill first
+- Build an MCP server using the mcp-builder skill
+- Set up a new Next.js project with TypeScript
+
+## 设计决策
+### What skills are available?
 
 1. assistant request:
 
@@ -47,8 +155,9 @@ request = {
 }
 ```
 
+### Build an MCP server using the mcp-builder skill
+1. assistant request:
 
-assistant request: 
 ```json
 {
   "max_tokens": 8000,
@@ -1028,7 +1137,9 @@ assistant request:
   ]
 }
 ```
-assistant response: 
+
+2. assistant response:
+
 ```json
 {
   "id": "msg_bdrk_01H5CtHh82z4W9tozAJZJpeD",
@@ -1062,9 +1173,11 @@ assistant response:
   }
 }
 ```
+
 > bash: 2176 总计
 
-assistant request: 
+3. assistant request:
+
 ```json
 {
   "max_tokens": 8000,
@@ -2071,7 +2184,9 @@ assistant request:
   ]
 }
 ```
-assistant response: 
+
+4. assistant response:
+
 ```bash
 {
   "id": "msg_bdrk_017SusRh2DPB145BEBQZ2Wre",
@@ -2104,14 +2219,14 @@ assistant response:
     "output_tokens": 875
   }
 }
+```
 > bash: ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
 ║                    ✨ PROJECT COMPLETE ✨             
 
-```
+5. assistant request:
 
-assistant request: 
-````json
+```json
 {
   "max_tokens": 8000,
   "messages": [
@@ -3145,6 +3260,25 @@ assistant request:
 }
 ```
 
+
+## 设计决策
+1. 技能通过 tool_result 注入，而非系统提示词
+
+当 agent 调用 Skill 工具时，技能内容（SKILL.md 文件）作为 tool_result 在用户消息中返回，而非注入系统提示词。这是一个刻意的缓存优化：系统提示词在各轮次间保持静态，API 提供商可以缓存它（Anthropic 的 prompt caching、OpenAI 的 system message caching）。如果技能内容在系统提示词中，每次加载新技能都会使缓存失效。将动态内容放在 tool_result 中，既保持了昂贵的系统提示词可缓存，又让技能知识进入了上下文。
+
+将技能注入系统提示更简单，并且能让技能在模型的注意力中获得更高的优先级。但它会破坏提示缓存（每个技能加载都会创建一个新的系统提示变体），并且随着技能的积累，系统提示会随着时间的推移而膨胀。工具结果方法以牺牲略微较低的注意力优先级为代价，保持了缓存友好性。
+
+2. 按需加载技能而非预加载
+
+技能不会在启动时加载。Agent 初始只拥有技能名称和描述（来自 frontmatter）。当 agent 判断需要特定技能时，调用 Skill 工具将完整的 SKILL.md 内容加载到上下文中。这保持了初始提示词的精简。一个正在修复 Python bug 的 agent 不需要加载 Kubernetes 部署技能——那会浪费上下文窗口空间，还可能用无关指令干扰模型。
+
+提前加载所有技能确保模型始终拥有所有知识，但会浪费与无关技能相关的 token，并可能超出上下文限制。推荐系统（模型建议技能，人类批准）会增加延迟。懒加载允许模型在需要时自我服务所需的知识。
+
+3. SKILL.md 采用 YAML Frontmatter + Markdown 正文
+
+每个 SKILL.md 文件有两部分：YAML frontmatter（名称、描述、globs）和 markdown 正文（实际指令）。Frontmatter 作为技能注册表的元数据——当 agent 问'有哪些可用技能'时，展示的就是这些信息。正文是按需加载的有效负载。这种分离意味着可以列出 100 个技能（每个只读几字节的 frontmatter）而不必加载 100 套完整指令集（每套可能数千 token）。
+
+一个单独的元数据文件（skill.yaml + skill.md）可以工作，但会使得文件数量翻倍。将元数据嵌入到 markdown（作为标题或注释）需要解析整个文件来提取元数据。Frontmatter 是一种成熟的惯例（Jekyll、Hugo、Astro），它将元数据和内容放在一起但可以分别解析。
 
 
 
